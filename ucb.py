@@ -21,7 +21,35 @@ class UCB(MAB):
     """
 
     def __init__(self, narms, rho, Q0=np.inf):
+        self.narms = narms
+        self.rho = rho
+        self.Qs = np.full(narms, Q0)  # Q value for each arm
+        self.Ns = np.zeros(narms)  # Exploit times for each arm
+        self.Rs = np.zeros(narms)  # accumulated rewards, r in [0, 1]
 
     def play(self, tround, context=None):
+        def est_fn(q, n, r):
+            reward_mean = r / n
+            bonus = np.sqrt((2 * np.log(tround)) / n)
+            return reward_mean + bonus
+
+        # use unused arms
+        zero_indices = np.where(self.Ns == 0)[0]
+        if len(zero_indices) > 0:
+            k = zero_indices[0]
+        else:
+            # choose arm with max estimate value
+            est_values = [est_fn(q, n, r) for (q, n, r) in zip(self.Qs, self.Ns, self.Rs)]
+            k = np.argmax(est_values)
+        arm = k + 1
+        return arm
 
     def update(self, arm, reward, context=None):
+        # current values
+        k = arm - 1
+        q = self.Qs[k]
+        n = self.Ns[k]
+        # update
+        self.Qs[k] = ((q * n) + reward) / (n + 1)
+        self.Ns[k] = n + 1
+        self.Rs[k] += reward

@@ -23,8 +23,8 @@ class EpsGreedy(MAB):
     def __init__(self, narms, epsilon, Q0=np.inf):
         self.narms = narms
         self.epsilon = epsilon
-        self.Qs = np.full(narms, Q0)
-        self.Ns = np.zeros(narms)
+        self.Qs = np.full(narms, Q0)  # Q value for each arm
+        self.Ns = np.zeros(narms)  # Exploit times for each arm
 
     def play(self, tround, context=None):
         r = np.random.rand(0, 1)
@@ -36,8 +36,10 @@ class EpsGreedy(MAB):
         return arm
 
     def update(self, arm, reward, context=None):
+        # current values
         k = arm - 1
         q = self.Qs[k]
         n = self.Ns[k]
+        # update
         self.Qs[k] = ((q * n) + reward) / (n + 1)
-        self.Ns[k] += 1
+        self.Ns[k] = n + 1
