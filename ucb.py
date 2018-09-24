@@ -28,9 +28,9 @@ class UCB(MAB):
         self.Rs = np.zeros(narms)  # accumulated rewards, r in [0, 1]
 
     def play(self, tround, context=None):
-        def est_fn(q, n, r):
+        def est_fn(rho, r, n):
             reward_mean = r / n
-            bonus = np.sqrt((2 * np.log(tround)) / n)
+            bonus = np.sqrt((rho * np.log(tround)) / n)
             return reward_mean + bonus
 
         # use unused arms
@@ -39,7 +39,7 @@ class UCB(MAB):
             k = zero_indices[0]
         else:
             # choose arm with max estimate value
-            est_values = [est_fn(q, n, r) for (q, n, r) in zip(self.Qs, self.Ns, self.Rs)]
+            est_values = [est_fn(self.rho, r, n) for (r, n) in zip(self.Rs, self.Ns)]
             k = np.argmax(est_values)
         arm = k + 1
         return arm
