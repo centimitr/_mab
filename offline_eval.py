@@ -1,8 +1,3 @@
-import numpy as np
-from eps_greedy import EpsGreedy
-from ucb import UCB
-
-
 def offlineEvaluate(mab, arms, rewards, contexts, nrounds=None):
     """
     Offline evaluation of a multi-armed bandit
