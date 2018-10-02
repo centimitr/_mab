@@ -27,7 +27,7 @@ class EpsGreedy(MAB):
         self.Ns = np.zeros(narms)  # Exploit times for each arm
 
     def play(self, tround, context=None):
-        r = np.random.rand(0, 1)
+        r = np.random.random()
         if r < self.epsilon:
             idx = np.random.randint(0, self.narms)
         else:

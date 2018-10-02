@@ -36,7 +36,7 @@ class UCB(MAB):
         # use unused arms
         zero_indices = np.where(self.Ns == 0)[0]
         if len(zero_indices) > 0:
-            idx = zero_indices[0]
+            idx = np.random.choice(zero_indices)
         else:
             # choose arm with max estimate value
             est_values = [est_fn(self.rho, r, n) for (r, n) in zip(self.Rs, self.Ns)]

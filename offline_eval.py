@@ -31,7 +31,7 @@ def offlineEvaluate(mab, arms, rewards, contexts, nrounds=None):
     """
 
     history = []
-    total_reward = 0
+    reward_history = []
 
     # exit when 0 rounds
     if nrounds == 0:
@@ -40,19 +40,21 @@ def offlineEvaluate(mab, arms, rewards, contexts, nrounds=None):
     tround = 1
     idx = 0
     while tround <= nrounds:
-        while True:
-            context = contexts[idx]
-            arm = arms[idx]
-            reward = rewards[idx]
-            idx += 1
+        if idx >= len(contexts) - 1:
+            break
 
-            chosen_arm = mab.play(tround, context)
-            if chosen_arm == arm:
-                break
-        # when matching
-        mab.update(arm, reward, context)
-        history.append((context, arm, reward))
-        total_reward += reward
-        tround += 1
+        # get next event
+        context = contexts[idx]
+        arm = arms[idx]
+        reward = rewards[idx]
+        idx += 1
 
-    return total_reward / nrounds
+        chosen_arm = mab.play(tround, context)
+        # when arm matching
+        if chosen_arm == arm:
+            mab.update(arm, reward, context)
+            history.append((context, arm, reward))
+            reward_history.append(reward)
+            tround += 1
+
+    return reward_history
