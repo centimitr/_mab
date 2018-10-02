@@ -21,6 +21,6 @@ results_UCB = offlineEvaluate(mab, arms, rewards, contexts, 800)
 print('UCB average reward', np.mean(results_UCB))
 
 # P3
-# mab = LinUCB(10, 10, 1.0)
-# results_LinUCB = offlineEvaluate(mab, arms, rewards, contexts, 800)
-# print('LinUCB average reward', np.mean(results_LinUCB))
+mab = LinUCB(10, 10, 1.0)
+results_LinUCB = offlineEvaluate(mab, arms, rewards, contexts, 800)
+print('LinUCB average reward', np.mean(results_LinUCB))
