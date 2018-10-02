@@ -29,3 +29,30 @@ def offlineEvaluate(mab, arms, rewards, contexts, nrounds=None):
     out : 1D float array
         rewards for the matching events
     """
+
+    history = []
+    total_reward = 0
+
+    # exit when 0 rounds
+    if nrounds == 0:
+        return 0
+
+    tround = 1
+    idx = 0
+    while tround <= nrounds:
+        while True:
+            context = contexts[idx]
+            arm = arms[idx]
+            reward = rewards[idx]
+            idx += 1
+
+            chosen_arm = mab.play(tround, context)
+            if chosen_arm == arm:
+                break
+        # when matching
+        mab.update(arm, reward, context)
+        history.append((context, arm, reward))
+        total_reward += reward
+        tround += 1
+
+    return total_reward / nrounds
