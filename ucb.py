@@ -36,20 +36,20 @@ class UCB(MAB):
         # use unused arms
         zero_indices = np.where(self.Ns == 0)[0]
         if len(zero_indices) > 0:
-            k = zero_indices[0]
+            idx = zero_indices[0]
         else:
             # choose arm with max estimate value
             est_values = [est_fn(self.rho, r, n) for (r, n) in zip(self.Rs, self.Ns)]
-            k = np.argmax(est_values)
-        arm = k + 1
+            idx = np.argmax(est_values)
+        arm = idx + 1
         return arm
 
     def update(self, arm, reward, context=None):
         # current values
-        k = arm - 1
-        q = self.Qs[k]
-        n = self.Ns[k]
+        idx = arm - 1
+        q = self.Qs[idx]
+        n = self.Ns[idx]
         # update
-        self.Qs[k] = ((q * n) + reward) / (n + 1)
-        self.Ns[k] = n + 1
-        self.Rs[k] += reward
+        self.Qs[idx] = ((q * n) + reward) / (n + 1) if n > 0 else reward
+        self.Ns[idx] = n + 1
+        self.Rs[idx] += reward

@@ -29,17 +29,17 @@ class EpsGreedy(MAB):
     def play(self, tround, context=None):
         r = np.random.rand(0, 1)
         if r < self.epsilon:
-            k = np.random.randint(0, self.narms)
+            idx = np.random.randint(0, self.narms)
         else:
-            k = np.argmax(self.Qs)
-        arm = k + 1
+            idx = np.argmax(self.Qs)
+        arm = idx + 1
         return arm
 
     def update(self, arm, reward, context=None):
         # current values
-        k = arm - 1
-        q = self.Qs[k]
-        n = self.Ns[k]
+        idx = arm - 1
+        q = self.Qs[idx]
+        n = self.Ns[idx]
         # update
-        self.Qs[k] = ((q * n) + reward) / (n + 1)
-        self.Ns[k] = n + 1
+        self.Qs[idx] = ((q * n) + reward) / (n + 1) if n > 0 else reward
+        self.Ns[idx] = n + 1
