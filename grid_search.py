@@ -4,12 +4,13 @@ import matplotlib.pyplot as plt
 from lin_ucb import LinUCB
 from offline_eval import offlineEvaluate
 
-data = np.genfromtxt("data/dataset.txt", delimiter=" ")
-arms = data[:, 0].astype(np.int64)
-rewards = data[:, 1]
-contexts = data[:, 2:]
 
-nrounds = 800
+# data = np.genfromtxt("data/dataset.txt", delimiter=" ")
+# arms = data[:, 0].astype(np.int64)
+# rewards = data[:, 1]
+# contexts = data[:, 2:]
+#
+# nrounds = 800
 
 
 # alpha = 1 + sqrt(ln(2/δ)/2)
@@ -20,6 +21,7 @@ def linucb_mean_rewards_by_alpha(start, end, step, arms, rewards, contexts, nrou
 
     rng = np.arange(start, end, step)
     for alpha in rng:
+        # print(alpha)
         mab = LinUCB(10, 10, alpha)
         result_rewards = offlineEvaluate(mab, arms, rewards, contexts, nrounds)
         mean_rewards_dict.append(np.mean(result_rewards))
@@ -42,7 +44,7 @@ def linucb_mean_rewards_by_alpha(start, end, step, arms, rewards, contexts, nrou
     # to contain the annotation
     ax.set_ylim(top=ax.get_ylim()[1] + 0.001)
 
-    plt.xlabel('alpha (step={:1.f})'.format(step))
+    plt.xlabel('alpha (step={:.1f})'.format(step))
     plt.ylabel('mean rewards')
     plt.title('LinUCB: mean rewards by alpha')
     plt.show()

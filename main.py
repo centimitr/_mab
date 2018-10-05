@@ -44,7 +44,7 @@ kw = dict(
 )
 linucb_mean_rewards_by_alpha(**kw)
 
-kw.step = 0.1
+kw['step'] = 0.1
 linucb_mean_rewards_by_alpha(**kw)
 
 # P5
