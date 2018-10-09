@@ -39,52 +39,65 @@ class KernelUCB(MAB):
         # self.u = u.T
         # self.y = np.array([])
         self.history_rewards = [0.]
+        self.history_context = []
         self.tround = 1
-        self.last_k_ctx = None
-        self.last_K_inv = None
+
+        # self.last_k_ctx = None
+        self.last_Kinv = None
         return
 
     def _ctx_for_arm(self, context, arm):
         return context[self.ndims * (arm - 1):self.ndims * arm]
 
-    def _k_ctx_for_arm(self, context, arm_range):
-        ctx_for_last_arm = self._ctx_for_arm(context, arm_range[-1])
-        return np.array([self.kern([ctx_for_last_arm], [self._ctx_for_arm(context, arm)]) for arm in
-                         arm_range]).T
+    def _k_ctx_for_arm(self, ctx, ctx_list):
+        return np.array([self.kern([ctx, ctx_item]) for ctx_item in ctx_list]).T
+
+    def _inv(self, a):
+        phalanx = a.shape[0] == a.shape[1]
+        invertible = phalanx and np.linalg.matrix_rank(a) == a.shape[0]
+        return inv(a) if invertible else a
 
     def play(self, tround, context):
+        if tround == 1:
+            self.u = [1 if idx == 0 else 0 for idx in range(self.narms)]
+        else:
+            for arm in self.arm_range:
+                cur_ctx = self._ctx_for_arm(context, arm)
+                cur_k_ctx = self._k_ctx_for_arm(cur_ctx, self.history_context)
+                y = np.array(self.history_rewards).T
+
+                sigma = np.sqrt(self.kern([cur_ctx, cur_ctx]) - np.dot(np.dot(cur_k_ctx.T, self.last_Kinv),
+                                                                       cur_k_ctx))
+                u = np.dot(np.dot(cur_k_ctx.T, self.last_Kinv), y) + (self.eta / np.sqrt(self.gamma)) * sigma
+
+                idx = arm - 1
+                self.u[idx] = u
+
         idx = np.argmax(self.u)
         arm = idx + 1
         self.tround = tround
         return arm
 
     def update(self, arm, reward, context):
-        self.history_rewards.append(reward)
-        # self.y = np.append(self.y, reward).T
-        y = np.array(self.history_rewards).T
         ctx = self._ctx_for_arm(context, arm)
-        k_ctx = self._k_ctx_for_arm(context, self.arm_range)
-        kern_ctx_ctx = self.kern([ctx], [ctx])
+        self.history_context.append(ctx)
+        self.history_rewards.append(reward)
+        # y = np.array(self.history_rewards).T
+        # k_ctx = self._k_ctx_for_arm(context, self.arm_range)
+        kern_ctx_ctx = self.kern([ctx, ctx])
 
         if self.tround == 1:
-            K_inv = (kern_ctx_ctx + self.gamma).T
+            Kinv = 1. / (kern_ctx_ctx + self.gamma)
         else:
-            b = self.last_k_ctx
-            K22 = inv(kern_ctx_ctx + self.gamma - np.dot(np.dot(b.T, self.last_K_inv), b))
-            K11 = self.last_K_inv + np.dot(np.dot(np.dot(np.dot(K22, self.last_K_inv), b), b.T), self.last_K_inv)
-            K12 = -1 * np.dot(np.dot(K22, self.last_K_inv), b)
-            K21 = -1 * np.dot(np.dot(K22, b.T), self.last_K_inv)
-            K_inv = np.block([[K11, K12], [K21, K22]])
+            b = self._k_ctx_for_arm(ctx, self.history_context)
+            btKinv = np.dot(b.T, self.last_Kinv)
+            Kinvb = np.dot(self.last_Kinv, b)
 
-        for arm in self.arm_range:
-            cur_ctx = self._ctx_for_arm(context, arm)
-            cur_k_ctx = self._k_ctx_for_arm(self._ctx_for_arm(context, arm), range(1, arm + 1))
-            sigma = np.sqrt(
-                self.kern([cur_ctx], [cur_ctx]) - np.dot(np.dot(cur_k_ctx.T, K_inv), cur_k_ctx))
-            u = np.dot(np.dot(cur_k_ctx.T, K_inv), y) + self.eta / np.sqrt(
-                self.gamma) * sigma
+            K22 = self._inv((kern_ctx_ctx + self.gamma) - np.dot(btKinv, b))
+            K11 = self.last_Kinv + np.dot(np.dot(K22, Kinvb), btKinv)
+            K12 = np.dot(-K22, Kinvb)
+            K21 = np.dot(-K22, btKinv)
+            #
+            Kinv = np.block([[K11, K12], [K21, K22]])
 
-            self.u[arm] = u
-
-        self.last_k_ctx = k_ctx
-        self.last_K_inv = K_inv
+        self.last_Kinv = Kinv
