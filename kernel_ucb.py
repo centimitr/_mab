@@ -52,11 +52,6 @@ class KernelUCB(MAB):
     def _k_ctx_for_arm(self, ctx, ctx_list):
         return np.array([self.kern([ctx, ctx_item]) for ctx_item in ctx_list]).T
 
-    def _inv(self, a):
-        phalanx = a.shape[0] == a.shape[1]
-        invertible = phalanx and np.linalg.matrix_rank(a) == a.shape[0]
-        return inv(a) if invertible else a
-
     def play(self, tround, context):
         if tround == 1:
             self.u = [1 if idx == 0 else 0 for idx in range(self.narms)]
@@ -82,8 +77,6 @@ class KernelUCB(MAB):
         ctx = self._ctx_for_arm(context, arm)
         self.history_context.append(ctx)
         self.history_rewards.append(reward)
-        # y = np.array(self.history_rewards).T
-        # k_ctx = self._k_ctx_for_arm(context, self.arm_range)
         kern_ctx_ctx = self.kern([ctx, ctx])
 
         if self.tround == 1:
@@ -93,11 +86,11 @@ class KernelUCB(MAB):
             btKinv = np.dot(b.T, self.last_Kinv)
             Kinvb = np.dot(self.last_Kinv, b)
 
-            K22 = self._inv((kern_ctx_ctx + self.gamma) - np.dot(btKinv, b))
+            K22 = inv((kern_ctx_ctx + self.gamma) - np.dot(btKinv, b))
             K11 = self.last_Kinv + np.dot(np.dot(K22, Kinvb), btKinv)
             K12 = np.dot(-K22, Kinvb)
             K21 = np.dot(-K22, btKinv)
-            #
+
             Kinv = np.block([[K11, K12], [K21, K22]])
 
         self.last_Kinv = Kinv

@@ -48,7 +48,7 @@ kw['step'] = 0.1
 linucb_mean_rewards_by_alpha(**kw)
 
 # P5
-# mab = KernelUCB(10, 10, 0.1, 0.1, rbf_kernel)
-# rewards_KernelUCB = offlineEvaluate(mab, arms, rewards, contexts, 800)
-# plot_data['KernelUCB'] = rewards_KernelUCB
-# plot_mab_rewards_per_round(plot_data, 800)
+mab = KernelUCB(10, 10, 0.1, 0.1, rbf_kernel)
+rewards_KernelUCB = offlineEvaluate(mab, arms, rewards, contexts, 800)
+plot_data['KernelUCB'] = rewards_KernelUCB
+plot_mab_rewards_per_round(plot_data, 800)
